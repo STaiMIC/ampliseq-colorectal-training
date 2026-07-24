@@ -2,7 +2,7 @@
 
 ## Step 1 — Open Codespace
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Nkiruka-Cynthia/ampliseq-colorectal-training)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/STaiMIC/ampliseq-colorectal-training)
 
 Or: **Code → Codespaces → Create codespace on main**
 
