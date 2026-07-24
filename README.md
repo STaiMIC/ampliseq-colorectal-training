@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Nkiruka-Cynthia/ampliseq-colorectal-training)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/STaiMIC/ampliseq-colorectal-training)
 [![nf-core](https://img.shields.io/badge/nf--core-ampliseq%202.18.0-brightgreen)](https://nf-co.re/ampliseq)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A526.04-blue)](https://www.nextflow.io/)
 [![Docker](https://img.shields.io/badge/container-Docker-2496ED)](https://www.docker.com/)
