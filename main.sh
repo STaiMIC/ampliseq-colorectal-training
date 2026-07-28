@@ -171,6 +171,8 @@ nextflow run nf-core/ampliseq \
     -profile test,docker \
     --outdir results \
     --skip_qiime \
+    --max_memory 6.GB \
+    --max_cpus 2 \
     -resume
 
 ###############################################################################
