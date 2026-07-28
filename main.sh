@@ -33,7 +33,7 @@ echo ""
 echo "╔════════════════════════════════════════════════════════════════════╗"
 echo "║          Ampliseq 16S Microbiome Training                          ║"
 echo "║                                                                    ║"
-echo "║     FASTQ → ASVs → Taxonomy → Diversity Analysis                   ║"
+echo "║     FASTQ → ASVs → QC/Decontam → Diversity-ready outputs           ║"
 echo "╚════════════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -129,17 +129,35 @@ echo ""
 # Display pipeline overview
 ###############################################################################
 
-echo "Pipeline to be executed:"
+echo "Pipeline steps that will run today:"
 echo ""
 echo "  1. FASTQC                 Assess raw read quality"
-echo "  2. Cutadapt                Remove primer sequences"
-echo "  3. DADA2                  Infer Amplicon Sequence Variants (ASVs)"
-echo "  4. Taxonomic Assignment   DADA2's built-in classifier (SILVA)"
-echo "  5. MultiQC                Aggregate quality reports"
+echo "  2. Cutadapt               Remove primer sequences"
+echo "  3. DADA2                  Filter, denoise, merge, infer ASVs, remove chimeras"
+echo "  4. Barrnap                Screen ASVs for rRNA gene content (BARRNAPSUMMARY)"
+echo "  5. Decontam                Flag/remove likely contaminant ASVs"
+echo "  6. MultiQC                Aggregate quality reports"
+echo "  7. Summary Report          Overall run summary (overall_summary.tsv)"
 echo ""
-echo "  NOTE: QIIME2 secondary analysis (diversity indices, barplots,"
-echo "  differential abundance) is SKIPPED for today's live demo — see"
-echo "  the --skip_qiime note just above the pipeline call below."
+echo "  SKIPPED today, on purpose, because of Codespace resource limits:"
+echo ""
+echo "    --skip_taxonomy   Skips DADA2's own SILVA-based taxonomy"
+echo "                      classification. Downloading + running the"
+echo "                      SILVA 138 reference against even the small"
+echo "                      test dataset was pushing past our 40-min"
+echo "                      process time limit on Codespaces hardware."
+echo ""
+echo "    --skip_qiime      Skips ALL QIIME2 secondary analysis: training"
+echo "                      a classifier from scratch, barplots, alpha/beta"
+echo "                      diversity, differential abundance. QIIME2_TRAIN"
+echo "                      alone can run well past an hour even on the"
+echo "                      tiny official test dataset — incompatible with"
+echo "                      a 45-60 min live class window."
+echo ""
+echo "  Both are FULL PIPELINE FEATURES you'd normally use on real data —"
+echo "  we're skipping them today purely for classroom time/resource"
+echo "  constraints, not because they aren't part of ampliseq. See the"
+echo "  toggle notes just above the pipeline call below to re-enable them."
 echo ""
 echo "Pipeline starting..."
 echo ""
@@ -148,23 +166,28 @@ echo ""
 # Run nf-core/ampliseq on the OFFICIAL test dataset
 ###############################################################################
 #
-# --skip_qiime TOGGLE
-# ~~~~~~~~~~~~~~~~~~~~
-# QIIME2_EXTRACT / QIIME2_TRAIN (training a taxonomy classifier from
-# scratch against the reference database) is one of the heaviest steps
-# in the whole pipeline — it can run well past an hour on modest local
-# hardware, even on the tiny official test dataset. That's incompatible
-# with a 45-60 min live class window.
+# --skip_taxonomy AND --skip_qiime TOGGLES
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Both of these are switched OFF for today's live demo purely because of
+# Codespace resource/time limits — not because they're optional extras.
 #
-# --skip_qiime skips ALL QIIME2 secondary analysis for the live demo:
-# classifier training, barplots, alpha/beta diversity, differential
-# abundance testing. DADA2's OWN taxonomy classification (the default,
-# using SILVA) still runs — so Lesson 4's taxonomy story is untouched.
+#   --skip_taxonomy   Skips DADA2's built-in SILVA classifier step.
+#                      On modest Codespace hardware, downloading the SILVA
+#                      138 reference and classifying — even against the
+#                      tiny test dataset — was blowing past our 40.min
+#                      process time limit set in nextflow.config.
 #
-# TO RUN THE FULL PIPELINE (with QIIME2 diversity analysis) OUTSIDE
-# CLASS TIME CONSTRAINTS: comment out the --skip_qiime line below, and
-# either raise nextflow.config's process time limit well above 40.min,
-# or run overnight / on a beefier machine. Budget 1-2+ hours extra.
+#   --skip_qiime      Skips QIIME2_EXTRACT / QIIME2_TRAIN (training a
+#                      taxonomy classifier from scratch) plus all QIIME2
+#                      diversity analysis (barplots, alpha/beta diversity,
+#                      differential abundance). This is the single heaviest
+#                      part of the whole pipeline — it can run past an hour
+#                      on modest hardware even on the tiny test dataset.
+#
+# TO RUN THE FULL PIPELINE (taxonomy + QIIME2 diversity analysis) OUTSIDE
+# CLASS TIME CONSTRAINTS: remove the --skip_taxonomy and --skip_qiime lines
+# below, and either raise nextflow.config's process time limit well above
+# 40.min, or run overnight / on a beefier machine. Budget 1-2+ hours extra.
 
 nextflow run nf-core/ampliseq \
     -r 2.18.0 \
@@ -194,28 +217,35 @@ echo ""
 
 echo "Key outputs:"
 echo ""
+echo "✓ Read quality reports     results/fastqc/"
+echo "✓ Primer-trimmed reads     results/cutadapt/"
+echo "✓ ASV abundance table      results/dada2/ASV_table.tsv"
+echo "✓ rRNA screening summary   results/barrnap/"
+echo "✓ Contaminant flags        results/decontam/"
 echo "✓ MultiQC report           results/multiqc/"
-echo "✓ Pipeline information    results/pipeline_info/"
-echo "✓ ASV abundance tables    results/dada2/ASV_table.tsv"
-echo "✓ Taxonomic assignments   results/dada2/ASV_tax.*.tsv"
+echo "✓ Pipeline run info        results/pipeline_info/"
+echo "✓ Overall run summary      results/summary_report/overall_summary.tsv"
 echo ""
-echo "  (QIIME2 diversity analysis was skipped for the live demo —"
-echo "   see the --skip_qiime note in this script to run it later.)"
+echo "  NOTE: no taxonomy table is produced today (--skip_taxonomy), and"
+echo "  no QIIME2 diversity outputs are produced today (--skip_qiime)."
+echo "  See the toggle notes in this script to run those later."
 echo ""
 
 echo "Next steps:"
 echo ""
 echo "1. Open the MultiQC report."
 echo "2. Inspect the ASV abundance table."
-echo "3. Explore taxonomic assignments."
+echo "3. Check the barrnap and decontam summaries — this is where we'll"
+echo "   talk about which ASVs look like real 16S signal vs. noise."
 echo "4. Continue with the exercises in course/REFERENCE.md"
 echo ""
 echo "5. To run this on YOUR OWN data, use the reference command shown"
 echo "   above, replacing data/samplesheet.csv and data/Metadata.tsv"
 echo "   with your real sample sheet and metadata."
 echo ""
-echo "6. To include QIIME2 diversity analysis (skipped above for time),"
-echo "   see the --skip_qiime toggle note just above the pipeline call"
+echo "6. To include taxonomy classification and/or QIIME2 diversity"
+echo "   analysis (both skipped above for time), see the --skip_taxonomy"
+echo "   and --skip_qiime toggle notes just above the pipeline call"
 echo "   in this script."
 echo ""
 
