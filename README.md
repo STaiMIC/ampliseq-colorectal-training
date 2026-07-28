@@ -150,6 +150,8 @@ nextflow run nf-core/ampliseq \
     -profile test,docker \
     --outdir results \
     --skip_qiime \
+    --max_memory 6.GB \
+    --max_cpus 2 \
     -resume
 ```
 (this is exactly what `bash main.sh` runs for you)
