@@ -174,6 +174,7 @@ nextflow run nf-core/ampliseq \
     --FW_primer GTGYCAGCMGCCGCGGTAA \
     --RV_primer GGACTACNVGGGTWTCTAAT \
     --outdir results \
+    --skip_taxonomy \
     --skip_qiime \
     -resume
 
