@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **A hands-on 16S microbiome practical for the STaiMIC Nextflow Training Program**
-*From raw 16S reads to ASVs and taxonomy — powered by nf-core/ampliseq 2.18.0*
+*From raw 16S reads to ASVs, QC, and decontamination — powered by nf-core/ampliseq 2.18.0*
 
 ---
 
@@ -28,13 +28,17 @@ Learn how to:
 - Quality-control raw 16S reads with FastQC
 - Remove primer sequences with Cutadapt
 - Infer Amplicon Sequence Variants (ASVs) with DADA2
-- Assign taxonomy using the SILVA reference database
+- Screen ASVs for rRNA gene content with Barrnap
+- Flag likely contaminant ASVs with Decontam
+- Assign taxonomy using the SILVA reference database *(full-pipeline capability — skipped in today's live demo, see note below)*
 
 No local installation needed. No HPC required. One command runs everything:
 
 ```bash
 bash main.sh
 ```
+
+> ⚠️ **Today's live class run skips two heavy stages** — DADA2/SILVA taxonomy assignment (`--skip_taxonomy`) and all of QIIME2's secondary analysis (`--skip_qiime`) — purely because of Codespace resource/time limits, not because they aren't part of the pipeline. See the toggle notes in `main.sh` for how to re-enable both outside class time constraints.
 
 For the full step-by-step walkthrough, see **[GETTING_STARTED.md](GETTING_STARTED.md)**. For Nextflow/ampliseq syntax and parameter details, see **[course/REFERENCE.md](course/REFERENCE.md)**.
 
@@ -53,7 +57,7 @@ The teaching narrative for this practical is a small **four-sample colorectal ca
 
 This design (`data/samplesheet.csv` + `data/Metadata.tsv`) is what you'd use on **your own real FASTQ data** — see the reference command in `course/REFERENCE.md`.
 
-> ⚠️ **Important:** today's live demo (`bash main.sh`) runs the **official nf-core/ampliseq test dataset**, not these four samples — this avoids downloading gigabytes of FASTQ data during class. The pipeline, parameters, and steps are identical either way; only the input data differs. Don't expect the live run's actual output to show a healthy-vs-CRC biological signal — for that, run the pipeline on real data using the reference command.
+> ⚠️ **Important:** today's live demo (`bash main.sh`) runs the **official nf-core/ampliseq test dataset**, not these four samples — this avoids downloading gigabytes of FASTQ data during class. The pipeline and steps are otherwise identical; only the input data differs, and taxonomy/QIIME2 are skipped for time (see above). Don't expect the live run's actual output to show a healthy-vs-CRC biological signal — for that, run the pipeline on real data using the reference command, with `--skip_taxonomy` and `--skip_qiime` removed.
 
 ---
 
@@ -84,17 +88,32 @@ This design (`data/samplesheet.csv` + `data/Metadata.tsv`) is what you'd use on 
        │
        ▼
    ┌──────────────────┐
-   │  Taxonomy via    │  ──▶  Assign taxonomy to each ASV
-   │  DADA2 + SILVA   │        Output: feature × taxa table
+   │  Barrnap         │  ──▶  Screen ASVs for rRNA gene content
+   └──────────────────┘        Output: rRNA summary (BARRNAPSUMMARY)
+       │
+       ▼
+   ┌──────────────────┐
+   │  Decontam        │  ──▶  Flag/remove likely contaminant ASVs
+   └──────────────────┘        Output: decontam-filtered ASV set
+       │
+       ▼
+   ┌──────────────────┐        ⏭  SKIPPED TODAY (--skip_taxonomy)
+   │  Taxonomy via    │  ──▶     Full pipeline: assigns taxonomy to
+   │  DADA2 + SILVA   │           each ASV against SILVA 138
    └──────────────────┘
        │
        ▼
    ┌──────────────┐
    │  MultiQC     │  ──▶  Aggregated QC + summary report
    └──────────────┘
+       │
+       ▼
+   ┌───────────────────┐
+   │  Summary Report   │  ──▶  overall_summary.tsv
+   └───────────────────┘
 ```
 
-QIIME2's secondary analysis branch (classifier training, barplots, alpha/beta diversity, differential abundance) also exists in the pipeline, but is **skipped in the live demo** via `--skip_qiime` — see `main.sh` for why and how to re-enable it outside class time constraints.
+QIIME2's secondary analysis branch (classifier training, barplots, alpha/beta diversity, differential abundance) also exists in the pipeline, but is **skipped in the live demo** via `--skip_qiime` — alongside DADA2's own taxonomy step (`--skip_taxonomy`). See `main.sh` for why and how to re-enable both outside class time constraints.
 
 ---
 
@@ -130,7 +149,7 @@ crc_patient_1	disease	1
 crc_patient_2	disease	1
 ```
 
-**Running on your OWN data:**
+**Running on your OWN data (full pipeline, including taxonomy + QIIME2 diversity):**
 ```bash
 nextflow run nf-core/ampliseq -r 2.18.0 \
     -profile docker \
@@ -157,9 +176,29 @@ nextflow run nf-core/ampliseq \
     --skip_qiime \
     -resume
 ```
-(this is exactly what `bash main.sh` runs for you)
+(this is exactly what `bash main.sh` runs for you — note both `--skip_taxonomy` and `--skip_qiime` are active today, for Codespace resource reasons only)
 
 Full parameter reference, output file structure, and troubleshooting: **[course/REFERENCE.md](course/REFERENCE.md)**.
+
+---
+
+## What You'll Get in `results/`
+
+After a successful live-demo run, expect:
+
+```
+results/
+├── fastqc/              Raw read quality reports
+├── cutadapt/             Primer-trimmed reads
+├── dada2/                 ASV_table.tsv — the core ASV abundance table
+├── barrnap/                rRNA screening summary (BARRNAPSUMMARY)
+├── decontam/                Contaminant-flagging output
+├── multiqc/                  Aggregated MultiQC report
+├── summary_report/             overall_summary.tsv — run-wide summary
+└── pipeline_info/                Nextflow execution reports, timelines, resource usage
+```
+
+No taxonomy table and no QIIME2 diversity outputs are produced today — those only appear once `--skip_taxonomy` and `--skip_qiime` are removed (see `main.sh`).
 
 ---
 
@@ -181,7 +220,7 @@ ampliseq-colorectal-training/
 │   ├── 01_samplesheet.nf         Lesson 1: samplesheet + metadata structure
 │   ├── 02_primer_trimming.nf     Lesson 2: Cutadapt QC concepts
 │   ├── 03_asv_inference.nf       Lesson 3: DADA2 ASV generation
-│   ├── 04_taxonomy_assignment.nf Lesson 4: taxonomy classification
+│   ├── 04_taxonomy_assignment.nf Lesson 4: taxonomy classification (concept — not run live today)
 │   └── REFERENCE.md              Nextflow + Ampliseq syntax & parameter reference
 │
 └── .devcontainer/
@@ -198,7 +237,8 @@ ampliseq-colorectal-training/
 | Ampliseq version | 2.18.0 | Compatible with modern Nextflow (≥26); older releases fail to parse due to a strict-syntax config incompatibility |
 | Live demo dataset | Official nf-core/ampliseq test data (`-profile test`) | No multi-GB download needed during class |
 | Region | 16S V4 | Universal bacterial marker gene |
-| Taxonomy | DADA2's built-in classifier (SILVA) | QIIME2's separate classifier training is skipped for time (see `--skip_qiime` in `main.sh`) |
+| Taxonomy (`--skip_taxonomy`) | Skipped in live demo | DADA2/SILVA classification pushed past our 40-min process time limit on Codespace hardware, even on the tiny test dataset |
+| QIIME2 (`--skip_qiime`) | Skipped in live demo | Classifier training + diversity analysis is the heaviest stage in the pipeline; can run past an hour even on the test dataset |
 | Container | Docker | Reliable, reproducible execution |
 | Resource limit | 2 CPU / 10GB RAM / 40 min per process | Sized for a 4-core/16GB local laptop or Codespaces; see `nextflow.config` |
 
