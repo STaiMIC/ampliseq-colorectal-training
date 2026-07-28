@@ -31,9 +31,9 @@ cd "$REPO_ROOT"
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════════════╗"
-echo "║          Ampliseq 16S Microbiome Training                            ║"
-echo "║                                                                        ║"
-echo "║     FASTQ → ASVs → Taxonomy → Diversity Analysis                      ║"
+echo "║          Ampliseq 16S Microbiome Training                          ║"
+echo "║                                                                    ║"
+echo "║     FASTQ → ASVs → Taxonomy → Diversity Analysis                   ║"
 echo "╚════════════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -132,14 +132,14 @@ echo ""
 echo "Pipeline to be executed:"
 echo ""
 echo "  1. FASTQC                 Assess raw read quality"
-echo "  2. Cutadapt               Remove primer sequences"
+echo "  2. Cutadapt                Remove primer sequences"
 echo "  3. DADA2                  Infer Amplicon Sequence Variants (ASVs)"
 echo "  4. Taxonomic Assignment   DADA2's built-in classifier (SILVA)"
 echo "  5. MultiQC                Aggregate quality reports"
 echo ""
 echo "  NOTE: QIIME2 secondary analysis (diversity indices, barplots,"
 echo "  differential abundance) is SKIPPED for today's live demo — see"
-echo "  the --skip_qiime2 note just above the pipeline call below."
+echo "  the --skip_qiime note just above the pipeline call below."
 echo ""
 echo "Pipeline starting..."
 echo ""
@@ -171,9 +171,10 @@ nextflow run nf-core/ampliseq \
     -profile docker \
     --input https://raw.githubusercontent.com/nf-core/test-datasets/ampliseq/samplesheets/Samplesheet_standardized.tsv \
     --metadata https://raw.githubusercontent.com/nf-core/test-datasets/ampliseq/samplesheets/Metadata.tsv \
+    --FW_primer GTGYCAGCMGCCGCGGTAA \
+    --RV_primer GGACTACNVGGGTWTCTAAT \
     --outdir results \
     --skip_qiime \
-    --skip_decontam \
     -resume
 
 ###############################################################################
@@ -192,13 +193,13 @@ echo ""
 
 echo "Key outputs:"
 echo ""
-echo "✓ MultiQC report          results/multiqc/"
+echo "✓ MultiQC report           results/multiqc/"
 echo "✓ Pipeline information    results/pipeline_info/"
 echo "✓ ASV abundance tables    results/dada2/ASV_table.tsv"
 echo "✓ Taxonomic assignments   results/dada2/ASV_tax.*.tsv"
 echo ""
 echo "  (QIIME2 diversity analysis was skipped for the live demo —"
-echo "   see the --skip_qiime2 note in this script to run it later.)"
+echo "   see the --skip_qiime note in this script to run it later.)"
 echo ""
 
 echo "Next steps:"
