@@ -7,6 +7,7 @@
 Or: **Code → Codespaces → Create codespace on main**
 
 Wait ~3 minutes. Setup is automatic. You will see:
+
 ```
 ✅ Setup complete! You are ready to run: bash main.sh
 ```
@@ -19,8 +20,11 @@ Wait ~3 minutes. Setup is automatic. You will see:
 nextflow run course/01_samplesheet.nf      # Understand the samplesheet + metadata
 nextflow run course/02_primer_trimming.nf  # QC and primer removal concepts
 nextflow run course/03_asv_inference.nf    # DADA2 ASV inference concepts
-nextflow run course/04_taxonomy_assignment.nf  # Taxonomic classification
+nextflow run course/04_taxonomy_assignment.nf  # Taxonomic classification concept
 ```
+
+Note: Lesson 4 walks through the *concept* of taxonomy classification — the live
+pipeline run in Step 3 doesn't actually produce a taxonomy table today (see below).
 
 ---
 
@@ -31,18 +35,26 @@ bash main.sh
 ```
 
 This runs the OFFICIAL nf-core/ampliseq test dataset (same pipeline, same
-steps you'd use on real data) — expected runtime: roughly 30 minutes on
-a 2-core/8GB Codespace, plus extra time on the very first run while
+steps you'd use on real data) — expected runtime: roughly 20 minutes on
+a 4-core/16GB Codespace, plus extra time on the very first run while
 Nextflow downloads the pipeline code, Docker images, and test data.
-Pipeline completed successfully = done.
 
-Note: QIIME2's diversity analysis, barplots, and classifier training are
-intentionally skipped (`--skip_qiime` in `main.sh`) to keep the live demo
-inside a class-friendly time window — see the comment above that line in
-`main.sh` for how to re-enable it later, outside class time constraints.
+Pipeline completed successfully = done. You'll see FASTQC, Cutadapt, DADA2,
+Barrnap, Decontam, MultiQC, and Summary Report all finish.
 
-To run this on YOUR OWN data instead, see the reference command in
-`course/REFERENCE.md` or printed at the top of `main.sh`'s output.
+Note: two stages are intentionally skipped today to keep the live demo inside
+a class-friendly time window:
+
+- **`--skip_taxonomy`** — DADA2's own SILVA-based taxonomy classification
+- **`--skip_qiime`** — QIIME2's diversity analysis, barplots, and classifier training
+
+Both are real features of the full pipeline, just too heavy for Codespace
+resources in a 45-60 min class. See the comments above the pipeline call in
+`main.sh` for how to re-enable either one later, outside class time constraints.
+
+To run this on YOUR OWN data instead (with taxonomy + QIIME2 included), see
+the reference command in `course/REFERENCE.md` or printed at the top of
+`main.sh`'s output.
 
 ---
 
@@ -58,17 +70,22 @@ open results/multiqc/multiqc_report.html
 # ASV abundance table
 cat results/dada2/ASV_table.tsv | head -20
 
-# Taxonomic assignments (DADA2's own classifier — QIIME2 taxonomy is skipped)
-cat results/dada2/ASV_tax.*.tsv | head -20
+# rRNA screening summary — did the ASVs look like real 16S signal?
+cat results/barrnap/*summary* | head -20
+
+# Decontam output — which ASVs got flagged as likely contaminants?
+cat results/decontam/*.tsv | head -20
 
 # Read-count tracking across every pipeline step
 cat results/overall_summary.tsv
 ```
 
-💡 QIIME2 diversity plots (alpha/beta diversity, barplots) are not
-generated in this run since `--skip_qiime` is set in `main.sh` for time.
-Remove that flag (see the comment above it in `main.sh`) to generate
-them — budget significant extra runtime if you do.
+💡 No taxonomy table (`ASV_tax.*.tsv`) is produced in this run — that's
+`--skip_taxonomy`, set in `main.sh` for time. No QIIME2 diversity plots
+(alpha/beta diversity, barplots) either — that's `--skip_qiime`. Remove
+either flag (see the comments above the pipeline call in `main.sh`) to
+generate them — budget significant extra runtime if you do, especially
+for QIIME2.
 
 ---
 
@@ -80,7 +97,8 @@ them — budget significant extra runtime if you do.
 | Config error mentioning `check_max` or "Unexpected input" | Your Nextflow version is too new for the pipeline release being used — this training is pinned to `-r 2.18.0` specifically to avoid this |
 | Samplesheet validation failed | Check `data/samplesheet.csv` uses exactly `sampleID,forwardReads,reverseReads` as headers |
 | Pipeline fails mid-run | Re-run `bash main.sh` — `-resume` restarts where it stopped |
-| Stuck for 30+ min on a QIIME2 step | Check `main.sh` still has `--skip_qiime` set — that step is very slow and shouldn't be running in the live-demo config |
+| Stuck for 30+ min on a QIIME2 or taxonomy step | Check `main.sh` still has both `--skip_taxonomy` and `--skip_qiime` set — these steps are slow and shouldn't be running in the live-demo config |
+| Looking for `ASV_tax.*.tsv` and it's missing | Expected — `--skip_taxonomy` is on for the live demo. It only appears once you remove that flag |
 | Out of memory | Upgrade Codespace to 4-core in GitHub settings, or increase Docker/WSL memory allocation |
 | Docker daemon not running | Start Docker Desktop and try again |
 | WSL won't start / virtualisation error | Check `.wslconfig` processor count matches your CPU, and that virtualization (VT-x) is enabled in BIOS |
