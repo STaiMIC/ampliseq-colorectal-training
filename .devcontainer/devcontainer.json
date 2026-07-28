@@ -1,6 +1,6 @@
 {
   "name": "Ampliseq 16S Training",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "image": "mcr.microsoft.com/devcontainers/miniconda:latest",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
