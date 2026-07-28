@@ -147,11 +147,14 @@ nextflow run nf-core/ampliseq -r 2.18.0 \
 ```bash
 nextflow run nf-core/ampliseq \
     -r 2.18.0 \
-    -profile test,docker \
+    -profile docker \
+    --input https://raw.githubusercontent.com/nf-core/test-datasets/ampliseq/samplesheets/Samplesheet_standardized.tsv \
+    --metadata https://raw.githubusercontent.com/nf-core/test-datasets/ampliseq/samplesheets/Metadata.tsv \
+    --FW_primer GTGYCAGCMGCCGCGGTAA \
+    --RV_primer GGACTACNVGGGTWTCTAAT \
     --outdir results \
+    --skip_taxonomy \
     --skip_qiime \
-    --max_memory 6.GB \
-    --max_cpus 2 \
     -resume
 ```
 (this is exactly what `bash main.sh` runs for you)
